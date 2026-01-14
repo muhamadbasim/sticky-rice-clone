@@ -1,43 +1,109 @@
-# Svelte + Vite
+# 🍚 Sticky Rice Clone
 
-This template should help get you started developing with Svelte in Vite.
+A visual sticky notes app inspired by [stickyriceapp.com](https://stickyriceapp.com/). Built with **Svelte 5** and **Vite**.
 
-## Recommended IDE Setup
+![Sticky Rice Clone Screenshot](./docs/screenshot.png)
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+## ✨ Features
 
-## Need an official Svelte framework?
+- 🎨 **Colorful Sticky Notes** - Yellow, Pink, Blue, Green, Orange, Purple
+- 🖱️ **Drag & Drop** - Reposition notes anywhere on the canvas
+- ✏️ **Inline Editing** - Click to edit note content directly
+- 🗑️ **Quick Delete** - Remove notes with the × button
+- 💾 **Auto-Save** - Notes persist in LocalStorage
+- 🌙 **Dark Theme** - Beautiful dark canvas with subtle grid pattern
+- 📱 **Responsive** - Works on desktop and mobile
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+## 🚀 Quick Start
 
-## Technical considerations
+```bash
+# Clone the repository
+git clone https://github.com/muhamadbasim/sticky-rice-clone.git
+cd sticky-rice-clone
 
-**Why use this over SvelteKit?**
+# Install dependencies
+npm install
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
-
-This template contains as little as possible to get started with Vite + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
-
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `checkJs` in the JS template?**
-
-It is likely that most cases of changing variable types in runtime are likely to be accidental, rather than deliberate. This provides advanced typechecking out of the box. Should you like to take advantage of the dynamically-typed nature of JavaScript, it is trivial to change the configuration.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/sveltejs/svelte-hmr/tree/master/packages/svelte-hmr#preservation-of-local-state).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```js
-// store.js
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+# Start development server
+npm run dev
 ```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| [Svelte 5](https://svelte.dev/) | UI Framework with Runes |
+| [Vite](https://vitejs.dev/) | Build tool & Dev server |
+| Vanilla CSS | Styling with CSS Variables |
+| LocalStorage | Data persistence |
+
+## 📁 Project Structure
+
+```
+src/
+├── App.svelte                 # Main app component
+├── app.css                    # Global styles & design system
+├── main.js                    # Entry point
+└── lib/
+    ├── components/
+    │   ├── Canvas.svelte      # Main board with grid background
+    │   ├── StickyNote.svelte  # Draggable note component
+    │   └── Toolbar.svelte     # Bottom action bar
+    └── stores/
+        └── boardStore.js      # State management + LocalStorage
+```
+
+## 🎯 How It Works
+
+### Adding Notes
+
+Click any color button in the toolbar to add a new sticky note of that color.
+
+### Moving Notes
+
+Click and drag a note by its header (top area with lines) to reposition it.
+
+### Editing Notes
+
+Click on the note body to start typing. Changes are saved automatically.
+
+### Deleting Notes
+
+Click the × button in the top-right corner of any note.
+
+## 🔧 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+
+## 📸 Screenshots
+
+### Main Interface
+
+Dark canvas with colorful sticky notes and floating toolbar.
+
+### Toolbar
+
+Bottom bar featuring the Sticky Rice brand, color picker buttons, and reset action.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgements
+
+- Inspired by [Sticky Rice App](https://stickyriceapp.com/)
+- Built with [Svelte](https://svelte.dev/) and [Vite](https://vitejs.dev/)
