@@ -1,6 +1,6 @@
-# 🍚 Sticky Rice Clone
+# ⚡ SATSET
 
-A visual sticky notes app inspired by [stickyriceapp.com](https://stickyriceapp.com/). Built with **Svelte 5** and **Vite**.
+Aplikasi produktivitas buat lo yang anti lelet. Visual sticky notes dengan gaya Gen Z.
 
 ![Sticky Rice Clone Screenshot](./docs/screenshot.png)
 

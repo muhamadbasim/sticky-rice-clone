@@ -1,23 +1,49 @@
 import { writable, get } from 'svelte/store';
 
-const STORAGE_KEY = 'sticky-rice-data-v2';
+const STORAGE_KEY = 'satset-data-v2';
 
-// Initial Data
+// --- Default Data for SATSET Pro ---
 const initialData = {
-  mode: 'kanban', // 'free' or 'kanban'
+  mode: 'kanban',
   columns: [
-    { id: 'col-1', title: 'To Do', noteIds: ['note-1', 'note-2'] },
-    { id: 'col-2', title: 'Doing', noteIds: ['note-3'] },
-    { id: 'col-3', title: 'Done', noteIds: [] }
+    { id: 'col-1', title: 'Wacana', noteIds: ['note-1', 'note-2', 'note-4'] },
+    { id: 'col-2', title: 'Lagi OTW', noteIds: ['note-3'] },
+    { id: 'col-3', title: 'Udah Kelar', noteIds: [] }
   ],
   notes: {
-    'note-1': { id: 'note-1', content: 'Explore Sticky Rice features', color: 'yellow' },
-    'note-2': { id: 'note-2', content: 'Plan the implementation', color: 'pink' },
-    'note-3': { id: 'note-3', content: 'Build Kanban Board', color: 'blue' }
+    'note-1': {
+      id: 'note-1',
+      type: 'text',
+      content: 'Tulis ide lo biar gak lupa',
+      color: 'yellow',
+      tags: ['#IDE']
+    },
+    'note-2': {
+      id: 'note-2',
+      type: 'bigtext',
+      content: 'TERIAK!',
+      color: 'pink',
+      tags: ['#PENTING']
+    },
+    'note-3': {
+      id: 'note-3',
+      type: 'checklist',
+      content: [
+        { text: 'Buka Laptop', done: true },
+        { text: 'Ngoding', done: true },
+        { text: 'Deploy', done: false }
+      ],
+      color: 'blue',
+      tags: ['#KERJAAN']
+    },
+    'note-4': {
+      id: 'note-4',
+      type: 'text',
+      content: 'Jangan wacana doang, kerjain!',
+      color: 'green',
+      tags: []
+    }
   },
-  // Keep legacy free-form notes here if needed, or unify.
-  // For simplicity, let's treat free-form notes as notes without a column, 
-  // but for this update we focus on Kanban.
   freeNotes: []
 };
 
@@ -55,7 +81,7 @@ function createBoardStore() {
       update(data => {
         const newCol = {
           id: crypto.randomUUID(),
-          title: 'New Column',
+          title: 'Wacana Baru',
           noteIds: []
         };
         return { ...data, columns: [...data.columns, newCol] };
@@ -78,18 +104,39 @@ function createBoardStore() {
       }));
     },
 
-    addNoteToColumn: (colId, color = 'yellow') => {
+    // Updated addNote to support types
+    addNote: (colId, type = 'text', color = 'yellow') => {
       update(data => {
         const newNoteId = crypto.randomUUID();
+        let content = '';
+
+        if (type === 'checklist') {
+          content = [{ text: 'Baru', done: false }];
+        } else if (type === 'bigtext') {
+          content = 'HEADLINE';
+        } else {
+          content = ''; // text
+        }
+
         const newNote = {
           id: newNoteId,
-          content: '',
-          color
+          type,
+          content,
+          color,
+          tags: []
         };
 
         const updatedNotes = { ...data.notes, [newNoteId]: newNote };
+
+        // If colId is provided, add to specific column. 
+        // If not (e.g. from global toolbar), add to first column (default inbox).
+        let targetColId = colId;
+        if (!targetColId && data.columns.length > 0) {
+          targetColId = data.columns[0].id;
+        }
+
         const updatedColumns = data.columns.map(col =>
-          col.id === colId
+          col.id === targetColId
             ? { ...col, noteIds: [...col.noteIds, newNoteId] }
             : col
         );
@@ -98,24 +145,42 @@ function createBoardStore() {
       });
     },
 
+    // For backward compatibility / explicit column add
+    addNoteToColumn: (colId) => {
+      // delegate to addNote
+      const newNoteId = crypto.randomUUID();
+      update(data => {
+        const newNote = {
+          id: newNoteId,
+          type: 'text',
+          content: '',
+          color: 'yellow',
+          tags: []
+        };
+        const updatedNotes = { ...data.notes, [newNoteId]: newNote };
+        const updatedColumns = data.columns.map(col =>
+          col.id === colId
+            ? { ...col, noteIds: [...col.noteIds, newNoteId] }
+            : col
+        );
+        return { ...data, notes: updatedNotes, columns: updatedColumns };
+      });
+    },
+
     moveNote: (noteId, sourceColId, targetColId, newIndex) => {
       update(data => {
-        // Remove from source
         const sourceCol = data.columns.find(c => c.id === sourceColId);
         const targetCol = data.columns.find(c => c.id === targetColId);
 
         if (!sourceCol || !targetCol) return data;
 
         const newSourceNoteIds = sourceCol.noteIds.filter(id => id !== noteId);
-
-        // Add to target at specific index
         const newTargetNoteIds = [...targetCol.noteIds];
+
         if (sourceColId === targetColId) {
-          // Moving within same column
-          newTargetNoteIds.splice(newTargetNoteIds.indexOf(noteId), 1); // remove old first
-          newTargetNoteIds.splice(newIndex, 0, noteId); // insert new
+          newTargetNoteIds.splice(newTargetNoteIds.indexOf(noteId), 1);
+          newTargetNoteIds.splice(newIndex, 0, noteId);
         } else {
-          // Moving to diff column
           newTargetNoteIds.splice(newIndex, 0, noteId);
         }
 
@@ -142,6 +207,43 @@ function createBoardStore() {
           [noteId]: { ...data.notes[noteId], content }
         }
       }));
+    },
+
+    updateNoteColor: (noteId, color) => {
+      update(data => ({
+        ...data,
+        notes: {
+          ...data.notes,
+          [noteId]: { ...data.notes[noteId], color }
+        }
+      }));
+    },
+
+    updateNoteType: (noteId, type) => {
+      update(data => {
+        const note = data.notes[noteId];
+        if (!note) return data;
+
+        let newContent = note.content;
+
+        // Conversion logic
+        if (note.type === 'checklist' && type !== 'checklist') {
+          // Convert array to string
+          newContent = note.content.map(i => (i.done ? '[x] ' : '[ ] ') + i.text).join('\n');
+        } else if (note.type !== 'checklist' && type === 'checklist') {
+          // Convert string to array
+          const lines = typeof note.content === 'string' ? note.content.split('\n') : [''];
+          newContent = lines.map(line => ({ text: line.replace(/^\[.\] /, ''), done: line.includes('[x]') }));
+        }
+
+        return {
+          ...data,
+          notes: {
+            ...data.notes,
+            [noteId]: { ...note, type, content: newContent }
+          }
+        };
+      });
     },
 
     deleteNote: (noteId) => {

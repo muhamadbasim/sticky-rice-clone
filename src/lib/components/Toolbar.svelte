@@ -1,6 +1,8 @@
 <script>
     import { boardStore } from "../stores/boardStore.js";
 
+    let { searchTerm = $bindable() } = $props();
+
     const colors = [
         { name: "yellow", label: "Yellow" },
         { name: "pink", label: "Pink" },
@@ -27,8 +29,8 @@
 <div class="toolbar">
     <div class="toolbar-content">
         <div class="brand">
-            <span class="logo">🍚</span>
-            <span class="title">Sticky Rice</span>
+            <span class="logo">⚡</span>
+            <span class="title">SATSET</span>
         </div>
 
         <div class="divider"></div>
@@ -49,6 +51,17 @@
         </div>
 
         <div class="divider"></div>
+
+        <div class="search-container">
+            <input
+                type="text"
+                placeholder="Cari wacana..."
+                bind:value={searchTerm}
+                class="search-input"
+            />
+        </div>
+
+        <div class="spacer"></div>
 
         <div class="actions">
             <button
@@ -123,6 +136,29 @@
         width: 1px;
         height: 24px;
         background: rgba(255, 255, 255, 0.1);
+        margin: 0 16px;
+    }
+
+    .search-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 6px 12px;
+        color: white;
+        font-size: 14px;
+        width: 200px;
+        transition: all 0.2s;
+    }
+
+    .search-input:focus {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        outline: none;
+        width: 240px;
+    }
+
+    .spacer {
+        flex: 1;
     }
 
     .color-picker {

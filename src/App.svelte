@@ -1,14 +1,19 @@
 <script>
-  import KanbanBoard from "./lib/components/KanbanBoard.svelte";
   import Toolbar from "./lib/components/Toolbar.svelte";
+  import KanbanBoard from "./lib/components/KanbanBoard.svelte";
+  import { onMount } from "svelte";
+  import { boardStore } from "./lib/stores/boardStore.js";
+
+  let searchTerm = $state("");
+
+  onMount(() => {
+    // Any init logic
+  });
 </script>
 
-<main class="app">
-  <KanbanBoard />
-  <!-- Toolbar for branding/reset -->
-  <div style="pointer-events: none; opacity: 0.5;">
-    <Toolbar />
-  </div>
+<main class="app-container">
+  <Toolbar bind:searchTerm />
+  <KanbanBoard {searchTerm} />
 </main>
 
 <style>

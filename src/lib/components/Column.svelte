@@ -5,7 +5,7 @@
     let { column } = $props();
 
     let isDragOver = $state(false);
-    let title = $state(column.title);
+    let title = $derived(column.title);
 
     function handleTitleChange(e) {
         boardStore.updateColumnTitle(column.id, e.target.value);
