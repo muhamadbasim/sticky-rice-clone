@@ -1,137 +1,165 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
-const STORAGE_KEY = 'sticky-rice-notes';
+const STORAGE_KEY = 'sticky-rice-data-v2';
 
-// Default notes for first-time users
-const defaultNotes = [
-  {
-    id: crypto.randomUUID(),
-    content: '👋 Welcome to Sticky Rice!\n\nDrag me around the board.',
-    x: 100,
-    y: 100,
-    color: 'yellow',
-    width: 220,
-    height: 180,
-    zIndex: 1,
-    createdAt: Date.now()
+// Initial Data
+const initialData = {
+  mode: 'kanban', // 'free' or 'kanban'
+  columns: [
+    { id: 'col-1', title: 'To Do', noteIds: ['note-1', 'note-2'] },
+    { id: 'col-2', title: 'Doing', noteIds: ['note-3'] },
+    { id: 'col-3', title: 'Done', noteIds: [] }
+  ],
+  notes: {
+    'note-1': { id: 'note-1', content: 'Explore Sticky Rice features', color: 'yellow' },
+    'note-2': { id: 'note-2', content: 'Plan the implementation', color: 'pink' },
+    'note-3': { id: 'note-3', content: 'Build Kanban Board', color: 'blue' }
   },
-  {
-    id: crypto.randomUUID(),
-    content: '✨ Click to edit this note.\n\nDouble-click the × to delete.',
-    x: 360,
-    y: 150,
-    color: 'pink',
-    width: 220,
-    height: 180,
-    zIndex: 2,
-    createdAt: Date.now()
-  },
-  {
-    id: crypto.randomUUID(),
-    content: '🎨 Try different colors!\n\nUse the toolbar below.',
-    x: 200,
-    y: 350,
-    color: 'blue',
-    width: 220,
-    height: 180,
-    zIndex: 3,
-    createdAt: Date.now()
-  }
-];
+  // Keep legacy free-form notes here if needed, or unify.
+  // For simplicity, let's treat free-form notes as notes without a column, 
+  // but for this update we focus on Kanban.
+  freeNotes: []
+};
 
-// Load from localStorage or use defaults
-function loadNotes() {
-  if (typeof window === 'undefined') return defaultNotes;
-  
+function loadData() {
+  if (typeof window === 'undefined') return initialData;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultNotes;
-    }
+    return stored ? JSON.parse(stored) : initialData;
   } catch (e) {
-    console.warn('Failed to load notes from localStorage:', e);
+    console.warn('Failed to load data:', e);
+    return initialData;
   }
-  
-  return defaultNotes;
 }
 
-// Save to localStorage
-function saveNotes(notes) {
+function saveData(data) {
   if (typeof window === 'undefined') return;
-  
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
-    console.warn('Failed to save notes to localStorage:', e);
+    console.warn('Failed to save data:', e);
   }
 }
 
-// Create the store
 function createBoardStore() {
-  const { subscribe, set, update } = writable(loadNotes());
-  
-  // Auto-save on changes
-  subscribe(notes => {
-    saveNotes(notes);
-  });
-  
+  const { subscribe, set, update } = writable(loadData());
+
+  subscribe(data => saveData(data));
+
   return {
     subscribe,
-    
-    addNote: (color = 'yellow') => {
-      update(notes => {
-        const maxZ = Math.max(0, ...notes.map(n => n.zIndex));
-        const newNote = {
+
+    // --- Kanban Actions ---
+
+    addColumn: () => {
+      update(data => {
+        const newCol = {
           id: crypto.randomUUID(),
-          content: '',
-          x: 150 + Math.random() * 200,
-          y: 150 + Math.random() * 200,
-          color,
-          width: 220,
-          height: 180,
-          zIndex: maxZ + 1,
-          createdAt: Date.now()
+          title: 'New Column',
+          noteIds: []
         };
-        return [...notes, newNote];
+        return { ...data, columns: [...data.columns, newCol] };
       });
     },
-    
-    updateNote: (id, updates) => {
-      update(notes => 
-        notes.map(note => 
-          note.id === id ? { ...note, ...updates } : note
+
+    updateColumnTitle: (colId, title) => {
+      update(data => ({
+        ...data,
+        columns: data.columns.map(col =>
+          col.id === colId ? { ...col, title } : col
         )
-      );
+      }));
     },
-    
-    deleteNote: (id) => {
-      update(notes => notes.filter(note => note.id !== id));
+
+    deleteColumn: (colId) => {
+      update(data => ({
+        ...data,
+        columns: data.columns.filter(c => c.id !== colId)
+      }));
     },
-    
-    bringToFront: (id) => {
-      update(notes => {
-        const maxZ = Math.max(0, ...notes.map(n => n.zIndex));
-        return notes.map(note => 
-          note.id === id ? { ...note, zIndex: maxZ + 1 } : note
+
+    addNoteToColumn: (colId, color = 'yellow') => {
+      update(data => {
+        const newNoteId = crypto.randomUUID();
+        const newNote = {
+          id: newNoteId,
+          content: '',
+          color
+        };
+
+        const updatedNotes = { ...data.notes, [newNoteId]: newNote };
+        const updatedColumns = data.columns.map(col =>
+          col.id === colId
+            ? { ...col, noteIds: [...col.noteIds, newNoteId] }
+            : col
         );
+
+        return { ...data, notes: updatedNotes, columns: updatedColumns };
       });
     },
-    
-    moveNote: (id, x, y) => {
-      update(notes => 
-        notes.map(note => 
-          note.id === id ? { ...note, x, y } : note
-        )
-      );
+
+    moveNote: (noteId, sourceColId, targetColId, newIndex) => {
+      update(data => {
+        // Remove from source
+        const sourceCol = data.columns.find(c => c.id === sourceColId);
+        const targetCol = data.columns.find(c => c.id === targetColId);
+
+        if (!sourceCol || !targetCol) return data;
+
+        const newSourceNoteIds = sourceCol.noteIds.filter(id => id !== noteId);
+
+        // Add to target at specific index
+        const newTargetNoteIds = [...targetCol.noteIds];
+        if (sourceColId === targetColId) {
+          // Moving within same column
+          newTargetNoteIds.splice(newTargetNoteIds.indexOf(noteId), 1); // remove old first
+          newTargetNoteIds.splice(newIndex, 0, noteId); // insert new
+        } else {
+          // Moving to diff column
+          newTargetNoteIds.splice(newIndex, 0, noteId);
+        }
+
+        const updatedColumns = data.columns.map(col => {
+          if (col.id === sourceColId && col.id === targetColId) {
+            return { ...col, noteIds: newTargetNoteIds };
+          } else if (col.id === sourceColId) {
+            return { ...col, noteIds: newSourceNoteIds };
+          } else if (col.id === targetColId) {
+            return { ...col, noteIds: newTargetNoteIds };
+          }
+          return col;
+        });
+
+        return { ...data, columns: updatedColumns };
+      });
     },
-    
-    clearAll: () => {
-      set([]);
+
+    updateNoteContent: (noteId, content) => {
+      update(data => ({
+        ...data,
+        notes: {
+          ...data.notes,
+          [noteId]: { ...data.notes[noteId], content }
+        }
+      }));
     },
-    
+
+    deleteNote: (noteId) => {
+      update(data => {
+        const newNotes = { ...data.notes };
+        delete newNotes[noteId];
+
+        const newColumns = data.columns.map(col => ({
+          ...col,
+          noteIds: col.noteIds.filter(id => id !== noteId)
+        }));
+
+        return { ...data, notes: newNotes, columns: newColumns };
+      });
+    },
+
     reset: () => {
-      set(defaultNotes);
+      set(initialData);
     }
   };
 }
