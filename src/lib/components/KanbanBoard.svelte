@@ -65,18 +65,19 @@
         overflow-x: auto;
         padding: 24px;
         /* Gen Z Aesthetic: Dark Aura / Mesh Gradient */
-        background: #0f0c29;
-        background: linear-gradient(
+        background: transparent;
+        /* background: #0f0c29; */
+        /* background: linear-gradient(
             135deg,
             #0f0c29 0%,
             #302b63 50%,
             #24243e 100%
         );
         background-size: 400% 400%;
-        animation: gradientBG 15s ease infinite;
+        animation: gradientBG 15s ease infinite; */
     }
 
-    @keyframes gradientBG {
+    /* @keyframes gradientBG {
         0% {
             background-position: 0% 50%;
         }
@@ -86,7 +87,7 @@
         100% {
             background-position: 0% 50%;
         }
-    }
+    } */
 
     .board-content {
         display: flex;
